@@ -44,6 +44,13 @@
   --danger-soft: #2b1212;
   --shadow: none;
 }
+:root[data-theme="dark"][data-accent="terracotta"] {
+  --accent: #ea580c;
+  --accent-hover: #c2410c;
+  --accent-soft: #2a1a12;
+  --accent-border: #5c2d16;
+  --accent-ink: #fdba74;
+}
 :root[data-accent="cobalt"] {
   --accent: #0284c7;
   --accent-hover: #0369a1;
