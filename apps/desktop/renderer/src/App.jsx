@@ -20,11 +20,8 @@ const iconPaths = {
 };
 function Icon({ name }) { return <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={iconPaths[name]} /></svg>; }
 const label = (view) => ({ Chat: "Chat", Tasks: "Activity", Models: "Models & keys" }[view] || view);
-const views = [
-  "Chat",
-  "Agents",
-  "OmniMode",
-  "Tasks",
+const studioViews = ["Chat", "Agents", "OmniMode", "Tasks"];
+const workspaceViews = [
   "Files",
   "Terminal",
   "Memory",
@@ -315,6 +312,25 @@ export default function App() {
       {label}
     </button>
   );
+  const renderNavigation = (items) =>
+    items.map((v) => (
+      <button
+        key={v}
+        type="button"
+        title={label(v)}
+        aria-current={view === v ? "page" : undefined}
+        className={view === v ? "active" : ""}
+        onClick={() => {
+          setView(v);
+          if (v === "Files") act(() => listFiles(directory));
+        }}
+      >
+        <span className="nav-icon" aria-hidden="true">
+          <Icon name={v} />
+        </span>
+        <span className="nav-text">{label(v)}</span>
+      </button>
+    ));
   return (
     <div className="app">
       {dialog && (
@@ -357,9 +373,10 @@ export default function App() {
           </form>
         </div>
       )}
-      <aside>
+      <aside className="workspace-sidebar">
         <div className="brand">
-          <img src={logo} alt="" width="28" height="28" /> <strong>OmniDev</strong>
+          <img src={logo} alt="" width="28" height="28" />
+          <span className="brand-copy"><strong>OmniDev</strong><small>DEVELOPER STUDIO</small></span>
         </div>
         <button
           className="sidebar-search"
@@ -371,66 +388,65 @@ export default function App() {
             );
           }}
         >
-          ⌕ <span>Find a conversation</span>
-          <kbd>⌘ K</kbd>
+          <span className="sidebar-search-icon" aria-hidden="true">⌕</span>
+          <span>Find a conversation</span>
+          <kbd>Ctrl K</kbd>
         </button>
-        <span className="nav-label">Workspace</span>
-        <nav>
-          {views.map((v) => (
-            <button
-              key={v}
-              className={view === v ? "active" : ""}
-              onClick={() => {
-                setView(v);
-                if (v === "Files") act(() => listFiles(directory));
-              }}
-            >
-              <span className="nav-icon" aria-hidden="true">
-                <Icon name={v} />
-              </span>
-              {label(v)}
-            </button>
-          ))}
-        </nav>
-        <button className="connection" onClick={() => setView("Connection")}>
-          <i className={online ? "online" : ""} />
-          <span>{online ? "Engine connected" : "Engine offline"}</span>
-          <span aria-hidden="true">↗</span>
-        </button>
+        <div className="nav-group">
+          <span className="nav-label">Studio</span>
+          <nav>{renderNavigation(studioViews)}</nav>
+        </div>
+        <div className="nav-group nav-group-workspace">
+          <span className="nav-label">Workspace</span>
+          <nav>{renderNavigation(workspaceViews)}</nav>
+        </div>
+        <div className="sidebar-footer">
+          <button className="connection" onClick={() => setView("Connection")}>
+            <i className={online ? "online" : ""} />
+            <span>{online ? "Engine connected" : "Engine offline"}</span>
+            <span aria-hidden="true">↗</span>
+          </button>
+          <small className="sidebar-caption">LOCAL-FIRST · PRIVATE WORKSPACE</small>
+        </div>
       </aside>
-      <main>
-        <header>
-          <h1>{label(view)}</h1>
-          {busy && <small role="status">Working…</small>}
-          <select
-            aria-label="Project"
-            value={project}
-            onChange={(e) => activateProject(e.target.value)}
-          >
-            <option value="">All projects</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-          {button("New project", async () => {
-            if (dirty && !(await ask("Discard unsaved edits before creating a project?", null))) return;
-            const name = await ask("Project name");
-            if (name) {
-              const created = await request("/projects/", "POST", { name });
-              const workspace = await request(`/projects/${created.id}/workspace`, "POST");
-              await refresh();
-              setProject(String(created.id));
-              setFile("");
-              setContent("");
-              setImagePreview("");
-              setDirty(false);
-              await listFiles(workspace.path);
-            }
-          })}
-          {button("Refresh", refresh)}
-          <button className="theme-toggle" aria-label="Toggle theme" title="Toggle light and dark" onClick={() => setAppearance({ ...appearance, theme: appearance.theme === "dark" ? "light" : "dark" })}>◐</button>
+      <main className="workspace-main">
+        <header className="workspace-topbar">
+          <div className="page-heading">
+            <span className="eyebrow">OMNIDEV / WORKSPACE</span>
+            <h1>{label(view)}</h1>
+          </div>
+          {busy && <small className="busy-indicator" role="status">Working…</small>}
+          <div className="topbar-actions">
+            <select
+              aria-label="Project"
+              value={project}
+              onChange={(e) => activateProject(e.target.value)}
+            >
+              <option value="">All projects</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            {button("New project", async () => {
+              if (dirty && !(await ask("Discard unsaved edits before creating a project?", null))) return;
+              const name = await ask("Project name");
+              if (name) {
+                const created = await request("/projects/", "POST", { name });
+                const workspace = await request(`/projects/${created.id}/workspace`, "POST");
+                await refresh();
+                setProject(String(created.id));
+                setFile("");
+                setContent("");
+                setImagePreview("");
+                setDirty(false);
+                await listFiles(workspace.path);
+              }
+            })}
+            {button("Refresh", refresh)}
+            <button className="theme-toggle" aria-label="Toggle theme" title="Toggle light and dark" onClick={() => setAppearance({ ...appearance, theme: appearance.theme === "dark" ? "light" : "dark" })}>◐</button>
+          </div>
         </header>
         {error && (
           <div role="alert" className="error">

@@ -1,7 +1,7 @@
 import React from "react";
 export const defaults = {
   theme: "light",
-  accent: "blue",
+  accent: "terracotta",
   density: "comfortable",
   font: "system",
   motion: "full",
@@ -11,7 +11,7 @@ export const defaults = {
 export function loadAppearance() {
   try {
     const saved = JSON.parse(localStorage.getItem("omnidev-appearance") || "{}");
-    return { ...defaults, ...saved, accent: ["blue", "graphite"].includes(saved.accent) ? saved.accent : "blue" };
+    return { ...defaults, ...saved, accent: ["terracotta", "cobalt", "graphite"].includes(saved.accent) ? saved.accent : "terracotta" };
   } catch {
     return defaults;
   }
@@ -19,7 +19,7 @@ export function loadAppearance() {
 export default function Personalization({ value, onChange }) {
   const options = {
     theme: ["light", "dark", "system"],
-    accent: ["blue", "graphite"],
+    accent: ["terracotta", "cobalt", "graphite"],
     density: ["comfortable", "compact"],
     font: ["system", "serif", "mono"],
     motion: ["full", "reduced"],
