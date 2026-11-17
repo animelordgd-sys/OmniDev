@@ -19,6 +19,8 @@ Improve the **Models & keys** screen so users can manage several credentials for
 - Let a credential be associated with one or more provider model IDs.
 - Make it possible to add and remove model assignments without re-entering the secret.
 - Keep the existing router fallback order, but make the credential used for each provider/model route explicit.
+- Apply cooldowns for credential-specific failures to the affected credential only. Key that cooldown by provider, model, and credential ID so another credential assigned to the same provider/model remains eligible for fallback.
+- Keep provider/model-wide cooldowns for failures that cannot be attributed to a specific credential.
 - Preserve compatibility with existing provider-level keys and existing router configurations during migration.
 
 ## API shape to consider
@@ -48,6 +50,11 @@ The exact schema and migration strategy should be aligned with the engine's curr
 5. Existing single-key configurations continue to work after upgrade.
 6. Removing one credential does not remove other credentials for that provider.
 7. Tests cover credential CRUD, route assignment, legacy migration, and secret redaction.
+
+## Implementation plan
+
+- Add a router regression test where the first credential for a provider/model fails with a credential-specific error and enters cooldown; verify that a second credential for the same provider/model is still attempted in the existing fallback order.
+- Also verify that the cooled-down credential is skipped on the next attempt while the second credential remains eligible.
 
 ## Implementation note
 
